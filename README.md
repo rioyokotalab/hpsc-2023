@@ -10,12 +10,12 @@
 | Class 4  | SIMD parallelization                 | 04_simd                   |
 | Class 5  | GPU programming 1                    | 05_openacc                |
 | Class 6  | GPU programming 2                    | 06_cuda                   |
-| Class 7  | Parallel programing models           | 07_starpu                 |
-| Class 8  | Cache blocking                       | 08_cache                  |
-| Class 9  | High Performance Python              | 09_python                 |
-| Class 10 | I/O libraries                        | 10_io                     |
-| Class 11 | Parallel debugger                    | 11_debugger               |
-| Class 12 | Parallel profiler                    | 12_profiler               |
+| Class 7  | Cache blocking                       | 07_cache                  |
+| Class 8  | High Performance Python              | 08_python                 |
+| Class 9  | I/O libraries                        | 09_io                     |
+| Class 10 | Parallel debugger                    | 10_debugger               |
+| Class 11 | Parallel profiler                    | 11_profiler               |
+| Class 12 | Build system                         | 12_build                  |
 | Class 13 | Containers                           | 13_container              |
 | Class 14 | Scientific computing                 | 14_pde                    |
 | Class 15 | Deep Learning                        | 15_dl                     |
