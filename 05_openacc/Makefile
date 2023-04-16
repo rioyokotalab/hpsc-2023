@@ -18,3 +18,9 @@
 	nvc++ 08_reduction.cpp -acc -Minfo
 09_matmult: 09_matmult.cpp
 	nvc++ 09_matmult.cpp -acc -gpu=managed -Minfo
+10_openmp: 10_openmp.cpp
+	g++ 10_openmp.cpp -fopenmp
+11_loop: 11_loop.cpp
+	g++ 11_loop.cpp -fopenmp
+12_matmult: 12_matmult.cpp
+	g++ 12_matmult.cpp -fopenmp -O3
