@@ -1,0 +1,13 @@
+all: one two three four
+	@echo $@
+	@echo $^
+	@echo $<
+one:
+two:
+three:
+four:
+
+main: foo.o bar.o
+	gcc $^ -o $@.out
+%.o: %.c
+	gcc -c $< -o $@

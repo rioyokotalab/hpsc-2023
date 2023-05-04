@@ -1,0 +1,26 @@
+hello:
+	echo "hello"
+
+silent:
+	@echo "hello"
+
+third: second
+	@echo "third"
+second: first
+	@echo "second"
+first:
+	@echo "first"
+
+main: foo.o bar.o
+	gcc foo.o bar.o -o main.out
+foo.o: foo.c
+	gcc -c foo.c -o foo.o
+bar.o: bar.c
+	gcc -c bar.c -o bar.o
+foo.c:
+	@echo "void bar();int main(){bar();}" > foo.c
+bar.c:
+	@echo "void bar(){}" > bar.c
+
+clean:
+	rm -f *.c *.o *.out
