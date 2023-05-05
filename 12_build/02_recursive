@@ -5,4 +5,8 @@
 04_simd:
 	make -C ../04_simd 00_vecadd 01_reduction 02_if 03_function 04_permute 05_sin 06_intrinsic_vecadd 07_intrinsic_reduction 08_intrinsic_if 09_intrinsic_permute 10_intrinsic_sin 13_nbody
 05_openacc:
-	make -C ../05_openacc 00_loop 01_gang 02_parallel 03_kernels 04_array 05_vector 06_iterator 07_scope 08_reduction 09_matmult 10_openmp 11_loop 12_matmult
+	make -C ../05_openacc 00_loop 01_gang 02_parallel 03_kernels 04_array 05_vector 06_iterator 07_scope 08_reduction 09_matmult
+06_cuda:
+	make -C ../06_cuda 00_hello 01_thread 02_block 03_if 04_atomic 05_reduction 06_shared 07_warp 08_scan 09_stream 10_cooperative 11_mpi
+07_cache:
+	make -C ../07_cache 00_base 01_loop_order 02_openmp 03_blocking 04_simd_blocking 05_sgemm 06_base 07_shared 08_block_8x8 09_reg_load 10_align 11_warp 12_vector_4x2
