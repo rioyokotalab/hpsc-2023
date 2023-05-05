@@ -1,0 +1,8 @@
+02_openmp: 
+	make -C ../02_openmp 00_hello 01_num_threads 02_loop 03_iterator 04_scope 05_scope 06_sections 07_private 08_tasks 09_reduction 10_atomic 11_scan 12_pi 13_merge_sort 14_bucket_sort
+03_mpi:
+	make -C ../03_mpi 00_hello 01_nbody 02_split 03_gather 04_bcast 05_allgather 06_iloop 07_jloop 08_derived_gather 09_derived_reduce 10_ring 11_distributed 12_non_blocking 13_one_sided
+04_simd:
+	make -C ../04_simd 00_vecadd 01_reduction 02_if 03_function 04_permute 05_sin 06_intrinsic_vecadd 07_intrinsic_reduction 08_intrinsic_if 09_intrinsic_permute 10_intrinsic_sin 13_nbody
+05_openacc:
+	make -C ../05_openacc 00_loop 01_gang 02_parallel 03_kernels 04_array 05_vector 06_iterator 07_scope 08_reduction 09_matmult 10_openmp 11_loop 12_matmult

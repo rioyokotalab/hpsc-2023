@@ -1,6 +1,5 @@
 00_hello: 00_hello.cpp
 	mpicxx 00_hello.cpp
-	mpirun -np 4 ./a.out
 01_nbody: 01_nbody.cpp
 	mpicxx 01_nbody.cpp
 02_split: 02_split.cpp
