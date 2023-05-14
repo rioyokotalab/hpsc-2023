@@ -14,7 +14,7 @@ void matmult(matrix &A, matrix &B, matrix &C, int N) {
   const int mc = 256;
   const int nr = 64;
   const int mr = 32;
-#pragma omp parallel for collapse(2)
+#pragma omp parallel for
   for (int jc=0; jc<n; jc+=nc) {
     for (int pc=0; pc<k; pc+=kc) {
       float Bc[kc*nc];
@@ -81,5 +81,5 @@ int main() {
   for (int i=0; i<N; i++)
     for (int j=0; j<N; j++)
       err += fabs(C[i][j]);
-  //printf("error: %lf\n",err/N/N);
+  printf("error: %lf\n",err/N/N);
 }
