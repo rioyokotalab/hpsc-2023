@@ -27,4 +27,4 @@ for n in range(nt):
     ax.set_zlim(1, 2)
     plt.pause(.01)
     ax.cla()
-plt.show()
+plt.savefig('figure.jpg')
