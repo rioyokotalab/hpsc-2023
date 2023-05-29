@@ -65,14 +65,14 @@ def main():
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
-    train_dataset = datasets.ImageFolder('/mnt/nfs/datasets/ILSVRC2012/train',
+    train_dataset = datasets.ImageFolder('/gs/hs1/tga-hpc-lecture/ILSVRC2012/train',
                                          transforms.Compose([
                                              transforms.RandomResizedCrop(224),
                                              transforms.RandomHorizontalFlip(),
                                              transforms.ToTensor(),
                                              normalize
                                          ]))
-    val_dataset = datasets.ImageFolder('/mnt/nfs/datasets/ILSVRC2012/val',
+    val_dataset = datasets.ImageFolder('/gs/hs1/tga-hpc-lecture/ILSVRC2012/val',
                                          transforms.Compose([
                                              transforms.Resize(256),
                                              transforms.CenterCrop(224),
