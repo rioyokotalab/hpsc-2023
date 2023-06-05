@@ -72,15 +72,15 @@ int main() {
                         b[j][i] * dx * dx * dy * dy) /
                     (2 * (dx * dx + dy * dy));
         }
+      }
 
-        for (int j = 0; j < ny; j++) {
-          p[j][nx - 1] = p[j][nx - 2];
-          p[j][0] = p[j][1];
-        }
-        for (int i = 0; i < nx; i++) {
-          p[0][i] = p[1][i];
-          p[ny - 1][i] = 0;
-        }
+      for (int j = 0; j < ny; j++) {
+        p[j][nx - 1] = p[j][nx - 2];
+        p[j][0] = p[j][1];
+      }
+      for (int i = 0; i < nx; i++) {
+        p[0][i] = p[1][i];
+        p[ny - 1][i] = 0;
       }
     }
 #ifdef DEBUG
