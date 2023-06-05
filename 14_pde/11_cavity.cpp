@@ -54,23 +54,14 @@ int main() {
                                 ((v[j + 1][i] - v[j - 1][i]) / (2 * dy)));
       }
     }
-#ifdef DEBUG
-    cout << "before nit for" << endl;
-#endif
-    for (int it = 0; it < nit; nit++) {
+    for (int it = 0; it < nit; it++) {
       // copy p to pn
       // pn = p;  // is this ok?
-#ifdef DEBUG
-      cout << "copy p to pn" << endl;
-#endif
       for (int j = 1; j < ny - 1; j++) {
         for (int i = 1; i < nx - 1; i++) {
           pn[j][i] = p[j][i];
         }
       }
-#ifdef DEBUG
-      cout << "calc1" << endl;
-#endif
       for (int j = 1; j < ny - 1; j++) {
         for (int i = 1; i < nx - 1; i++) {
           p[j][i] = (dy * dy * (pn[j][i + 1] + pn[j][i - 1]) +
@@ -79,9 +70,6 @@ int main() {
                     (2 * (dx * dx + dy * dy));
         }
       }
-#ifdef DEBUG
-      cout << "Done: calc1" << endl;
-#endif
 
       for (int j = 0; j < ny; j++) {
         p[j][nx - 1] = p[j][nx - 2];
@@ -92,24 +80,15 @@ int main() {
         p[ny - 1][i] = 0;
       }
     }
-#ifdef DEBUG
-    cout << "after nit for" << endl;
-#endif
 
     // un = u.copy()
     // vn = v.copy()
-#ifdef DEBUG
-    cout << "before copy of u and v" << endl;
-#endif
     for (int j = 1; j < ny - 1; j++) {
       for (int i = 1; i < nx - 1; i++) {
         un[j][i] = u[j][i];
         vn[j][i] = v[j][i];
       }
     }
-#ifdef DEBUG
-    cout << "after copy of u and v" << endl;
-#endif
     for (int j = 1; j < ny - 1; j++) {
       for (int i = 1; i < nx - 1; i++) {
         u[j][i] = (un[j][i] - un[j][i] * dt / dx * (un[j][i] - un[j][i - 1]) -
