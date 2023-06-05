@@ -27,8 +27,8 @@ int main() {
   mat b(ny, arr(nx, 0));
 
   mat pn(ny, arr(nx, 0));
-  mat un(ny);
-  mat vn(ny);
+  mat un(ny, arr(nx, 0));
+  mat vn(ny, arr(ny, 0));
 
   // initialize x and y
   for (int i = 0; i < nx; i++)
