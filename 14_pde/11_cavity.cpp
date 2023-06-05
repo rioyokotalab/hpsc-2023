@@ -7,6 +7,8 @@ using namespace std;
 typedef vector<double> arr;
 typedef vector<arr> mat;
 
+#define DEBUG 0
+
 int main() {
   const int nx = 41;
   const int ny = 41;
@@ -36,7 +38,9 @@ int main() {
 
   // main for
   for (int n = 0; n < nt; n++) {
-    cout << "n" << n << endl;
+#ifdef DEBUG
+    cout << "n:" << n << endl;
+#endif
     for (int j = 1; j < ny - 1; j++) {
       for (int i = 1; i < nx - 1; i++) {
         b[j][i] = rho * (1 / dt *
@@ -50,6 +54,9 @@ int main() {
                                 ((v[j + 1][i] - v[j - 1][i]) / (2 * dy)));
       }
     }
+#ifdef DEBUG
+    cout << "before nit for" << endl;
+#endif
     for (int it = 0; it < nit; nit++) {
       // copy p to pn
       // pn = p;  // is this ok?
@@ -76,15 +83,24 @@ int main() {
         }
       }
     }
+#ifdef DEBUG
+    cout << "after nit for" << endl;
+#endif
 
     // un = u.copy()
     // vn = v.copy()
+#ifdef DEBUG
+    cout << "before copy of u and v" << endl;
+#endif
     for (int j = 1; j < ny - 1; j++) {
       for (int i = 1; i < nx - 1; i++) {
         un[j][i] = u[j][i];
         vn[j][i] = v[j][i];
       }
     }
+#ifdef DEBUG
+    cout << "after copy of u and v" << endl;
+#endif
     for (int j = 1; j < ny - 1; j++) {
       for (int i = 1; i < nx - 1; i++) {
         u[j][i] = (un[j][i] - un[j][i] * dt / dx * (un[j][i] - un[j][i - 1]) -
