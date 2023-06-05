@@ -70,7 +70,7 @@ int main() {
           p[j][nx - 1] = p[j][nx - 2];
           p[j][0] = p[j][1];
         }
-        for (int i = 0; i < ny; i++) {
+        for (int i = 0; i < nx; i++) {
           p[0][i] = p[1][i];
           p[ny - 1][i] = 0;
         }
