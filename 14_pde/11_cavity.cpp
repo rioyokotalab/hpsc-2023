@@ -4,11 +4,24 @@
 #include <iostream>
 #include <vector>
 using namespace std;
-
 typedef vector<double> arr;
 typedef vector<arr> mat;
 
-#define DEBUG 0
+// #define DEBUG 0
+
+const int M = 1024; // num of threads per block
+#define BLOCKS(n_loop) (n_loop + M - 1) / M
+
+__global__ void init_zeros(double *a, int ny, int nx) {
+  const int index = blockIdx.x * blockDim.x + threadIdx.x;
+  const int j = index / ny;
+  const int i = index % nx;
+  if (j >= ny)
+    return;
+  if (i >= nx)
+    return;
+  a[j][i] = 0;
+}
 
 int main() {
   const int nx = 161;
@@ -24,12 +37,22 @@ int main() {
   vector<double> x(nx), y(ny);
   mat u(ny, arr(nx, 0));
   mat v(ny, arr(nx, 0));
-  mat p(ny, arr(nx, 0));
+  // mat p(ny, arr(nx, 0));
+  double *p; // cuda
   mat b(ny, arr(nx, 0));
 
-  mat pn(ny, arr(nx, 0));
+  // mat pn(ny, arr(nx, 0));
+  double *pn; // cuda
   mat un(ny, arr(nx, 0));
   mat vn(ny, arr(ny, 0));
+
+  // allocate cuda-related arrays
+  cudaMallocManaged(&p, nx * ny * sizeof(double));
+  cudaMallocManaged(&pn, nx * ny * sizeof(double));
+
+  // initialize cuda-related arrays
+  init_zeros<<<BLOCKS(ny * nx), M>>>(p, ny, nx);
+  init_zeros<<<BLOCKS(ny * nx), M>>>(pn, ny, nx);
 
   // initialize x and y
   for (int i = 0; i < nx; i++)
