@@ -1,3 +1,4 @@
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
@@ -10,13 +11,13 @@ typedef vector<arr> mat;
 #define DEBUG 0
 
 int main() {
-  const int nx = 41;
-  const int ny = 41;
-  int nt = 500;
+  const int nx = 161;
+  const int ny = 161;
+  int nt = 10;
   int nit = 50;
-  double dx = 2 / (nx - 1);
-  double dy = 2 / (ny - 1);
-  double dt = 0.01;
+  double dx = 2. / (nx - 1);
+  double dy = 2. / (ny - 1);
+  double dt = 0.0025;
   double rho = 1;
   double nu = 0.02;
 
@@ -35,12 +36,18 @@ int main() {
     x[i] = i * dx;
   for (int j = 0; j < ny; j++)
     y[j] = j * dy;
+#ifdef DEBUG
+  chrono::steady_clock::time_point tic, tic_iter;
+  chrono::steady_clock::time_point toc, toc_iter;
+  double time;
+#endif // DEBUG
 
-  // main for
+  // main for, do not apply openmp
   for (int n = 0; n < nt; n++) {
 #ifdef DEBUG
     cout << "n:" << n << endl;
-#endif
+    tic = chrono::steady_clock::now();
+#endif // DEBUG
     for (int j = 1; j < ny - 1; j++) {
       for (int i = 1; i < nx - 1; i++) {
         b[j][i] = rho * (1 / dt *
@@ -54,7 +61,19 @@ int main() {
                                 ((v[j + 1][i] - v[j - 1][i]) / (2 * dy)));
       }
     }
+#ifdef DEBUG
+    toc = chrono::steady_clock::now();
+    time = chrono::duration<double>(toc - tic).count();
+    cout << "1st ij loop       : " << time << endl;
+#endif // DEBUG
+#ifdef DEBUG
+    tic = chrono::steady_clock::now();
+#endif // DEBUG
+    // iteration : do not apply openmp
     for (int it = 0; it < nit; it++) {
+#ifdef DEBUG
+      tic_iter = chrono::steady_clock::now();
+#endif // DEBUG
       // copy p to pn
       // pn = p;  // is this ok?
       for (int j = 1; j < ny - 1; j++) {
@@ -62,6 +81,15 @@ int main() {
           pn[j][i] = p[j][i];
         }
       }
+#ifdef DEBUG
+      toc_iter = chrono::steady_clock::now();
+      time = chrono::duration<double>(toc_iter - tic_iter).count();
+      cout << "iteration loop copy p to pn : " << time << endl;
+#endif // DEBUG
+#ifdef DEBUG
+      tic_iter = chrono::steady_clock::now();
+#endif // DEBUG
+      // TODO: optimize this loop!!
       for (int j = 1; j < ny - 1; j++) {
         for (int i = 1; i < nx - 1; i++) {
           p[j][i] = (dy * dy * (pn[j][i + 1] + pn[j][i - 1]) +
@@ -70,7 +98,15 @@ int main() {
                     (2 * (dx * dx + dy * dy));
         }
       }
+#ifdef DEBUG
+      toc_iter = chrono::steady_clock::now();
+      time = chrono::duration<double>(toc_iter - tic_iter).count();
+      cout << "iteration loop update p     : " << time << endl;
+#endif // DEBUG
 
+#ifdef DEBUG
+      tic_iter = chrono::steady_clock::now();
+#endif // DEBUG
       for (int j = 0; j < ny; j++) {
         p[j][nx - 1] = p[j][nx - 2];
         p[j][0] = p[j][1];
@@ -79,8 +115,21 @@ int main() {
         p[0][i] = p[1][i];
         p[ny - 1][i] = 0;
       }
+#ifdef DEBUG
+      toc_iter = chrono::steady_clock::now();
+      time = chrono::duration<double>(toc_iter - tic_iter).count();
+      cout << "iteration loop boundary of p: " << time << endl;
+#endif // DEBUG
     }
+#ifdef DEBUG
+    toc = chrono::steady_clock::now();
+    time = chrono::duration<double>(toc - tic).count();
+    cout << "iteration loop    : " << time << endl;
+#endif // DEBUG
 
+#ifdef DEBUG
+    tic = chrono::steady_clock::now();
+#endif // DEBUG
     // un = u.copy()
     // vn = v.copy()
     for (int j = 1; j < ny - 1; j++) {
@@ -89,6 +138,14 @@ int main() {
         vn[j][i] = v[j][i];
       }
     }
+#ifdef DEBUG
+    toc = chrono::steady_clock::now();
+    time = chrono::duration<double>(toc - tic).count();
+    cout << "copy loop (u,v)   : " << time << endl;
+#endif // DEBUG
+#ifdef DEBUG
+    tic = chrono::steady_clock::now();
+#endif // DEBUG
     for (int j = 1; j < ny - 1; j++) {
       for (int i = 1; i < nx - 1; i++) {
         u[j][i] = (un[j][i] - un[j][i] * dt / dx * (un[j][i] - un[j][i - 1]) -
@@ -107,6 +164,14 @@ int main() {
                        (vn[j + 1][i] - 2 * vn[j][i] + vn[j - 1][i]));
       }
     }
+#ifdef DEBUG
+    toc = chrono::steady_clock::now();
+    time = chrono::duration<double>(toc - tic).count();
+    cout << "u,v update loop   : " << time << endl;
+#endif // DEBUG
+#ifdef DEBUG
+    tic = chrono::steady_clock::now();
+#endif // DEBUG
     for (int j = 0; j < ny; j++) {
       u[j][0] = 0;
       u[j][nx - 1] = 0;
@@ -119,6 +184,11 @@ int main() {
       v[0][i] = 0;
       v[ny - 1][i] = 0;
     }
+#ifdef DEBUG
+    toc = chrono::steady_clock::now();
+    time = chrono::duration<double>(toc - tic).count();
+    cout << "boundary condition: " << time << endl;
+#endif // DEBUG
   }
 
   return 0;
