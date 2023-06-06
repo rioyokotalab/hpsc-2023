@@ -12,7 +12,7 @@ typedef vector<arr> mat;
 const int M = 1024; // num of threads per block
 #define BLOCKS(n_loop) (n_loop + M - 1) / M
 
-__global__ void init_zeros(double *a, int ny, int nx) {
+__global__ void init_zeros(double **a, int ny, int nx) {
   const int index = blockIdx.x * blockDim.x + threadIdx.x;
   const int j = index / ny;
   const int i = index % nx;
@@ -21,6 +21,17 @@ __global__ void init_zeros(double *a, int ny, int nx) {
   if (i >= nx)
     return;
   a[j][i] = 0;
+}
+
+__global__ void copy_p_pn(double **p, double **pn, int ny, int nx) {
+  const int index = blockIdx.x * blockDim.x + threadIdx.x;
+  const int j = index / ny;
+  const int i = index % nx;
+  if (!(1 <= j && j < ny - 1))
+    return;
+  if (!(1 <= i && i < nx - 1))
+    return;
+  pn[j][i] = p[j][i];
 }
 
 int main() {
@@ -38,17 +49,21 @@ int main() {
   mat u(ny, arr(nx, 0));
   mat v(ny, arr(nx, 0));
   // mat p(ny, arr(nx, 0));
-  double *p; // cuda
+  double **p; // cuda
   mat b(ny, arr(nx, 0));
 
   // mat pn(ny, arr(nx, 0));
-  double *pn; // cuda
+  double **pn; // cuda
   mat un(ny, arr(nx, 0));
   mat vn(ny, arr(ny, 0));
 
   // allocate cuda-related arrays
-  cudaMallocManaged(&p, nx * ny * sizeof(double));
-  cudaMallocManaged(&pn, nx * ny * sizeof(double));
+  cudaMallocManaged(&p, ny * sizeof(double *));
+  for (int i = 0; i < nx; i++)
+    cudaMallocManaged(&p[i], nx * sizeof(double));
+  cudaMallocManaged(&pn, ny * sizeof(double *));
+  for (int i = 0; i < nx; i++)
+    cudaMallocManaged(&pn[i], nx * sizeof(double));
 
   // initialize cuda-related arrays
   init_zeros<<<BLOCKS(ny * nx), M>>>(p, ny, nx);
@@ -99,11 +114,12 @@ int main() {
 #endif // DEBUG
       // copy p to pn
       // pn = p;  // is this ok?
-      for (int j = 1; j < ny - 1; j++) {
-        for (int i = 1; i < nx - 1; i++) {
-          pn[j][i] = p[j][i];
-        }
-      }
+      // for (int j = 1; j < ny - 1; j++) {
+      //   for (int i = 1; i < nx - 1; i++) {
+      //     pn[j][i] = p[j][i];
+      //   }
+      // }
+      copy_p_pn<<<BLOCKS(nx * ny), M>>>(p, pn, ny, nx);
 #ifdef DEBUG
       toc_iter = chrono::steady_clock::now();
       time = chrono::duration<double>(toc_iter - tic_iter).count();
