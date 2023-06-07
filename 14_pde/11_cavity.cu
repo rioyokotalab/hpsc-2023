@@ -233,7 +233,7 @@ int main() {
 #ifdef DEBUG
     toc = chrono::steady_clock::now();
     time = chrono::duration<double>(toc - tic).count();
-    cout << "1st ij loop       : " << time << endl;
+    cout << "b update loop     : " << time << endl;
 #endif // DEBUG
 #ifdef DEBUG
     tic = chrono::steady_clock::now();
