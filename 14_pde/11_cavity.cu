@@ -73,7 +73,7 @@ __global__ void boundary_p_x(double **p, int ny, int nx) {
 }
 
 __global__ void update_u(double **u, double **un, double **p, int dt, int dy,
-    int dx, int ny, int nx) {
+    int dx, int ny, int nx, double rho, double nu) {
   const int index = blockIdx.x * blockDim.x + threadIdx.x;
   const int j = index / ny;
   const int i = index % nx;
@@ -89,7 +89,7 @@ __global__ void update_u(double **u, double **un, double **p, int dt, int dy,
 }
 
 __global__ void update_v(double **v, double **vn, double **p, int dt, int dy,
-    int dx, int ny, int nx) {
+    int dx, int ny, int nx, double rho, double nu) {
   const int index = blockIdx.x * blockDim.x + threadIdx.x;
   const int j = index / ny;
   const int i = index % nx;
@@ -258,8 +258,8 @@ int main() {
     //                    (vn[j + 1][i] - 2 * vn[j][i] + vn[j - 1][i]));
     //   }
     // }
-    update_u<<<BLOCKS(nx * ny), M>>>(u, un, p, dt, dy, dx, ny, nx);
-    update_v<<<BLOCKS(nx * ny), M>>>(v, vn, p, dt, dy, dx, ny, nx);
+    update_u<<<BLOCKS(nx * ny), M>>>(u, un, p, dt, dy, dx, ny, nx, rho, nu);
+    update_v<<<BLOCKS(nx * ny), M>>>(v, vn, p, dt, dy, dx, ny, nx, rho, nu);
 #ifdef DEBUG
     toc = chrono::steady_clock::now();
     time = chrono::duration<double>(toc - tic).count();
