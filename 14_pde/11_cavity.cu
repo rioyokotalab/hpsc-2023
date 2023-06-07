@@ -73,7 +73,7 @@ int main() {
   // mat p(ny, arr(nx, 0));
   double **p; // cuda
   // mat b(ny, arr(nx, 0));
-  duoble **b; // cuda
+  double **b; // cuda
 
   // mat pn(ny, arr(nx, 0));
   double **pn; // cuda
