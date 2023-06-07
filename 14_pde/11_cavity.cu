@@ -223,7 +223,7 @@ int main() {
   cout << "initialization    : " << time << endl;
 #endif // DEBUG
 
-  // main for, do not apply openmp
+  // main for
   for (int n = 0; n < nt; n++) {
 #ifdef DEBUG
     cout << "n:" << n << endl;
@@ -238,7 +238,7 @@ int main() {
 #ifdef DEBUG
     tic = chrono::steady_clock::now();
 #endif // DEBUG
-    // iteration : do not apply openmp
+    // iteration
     for (int it = 0; it < nit; it++) {
 #ifdef DEBUG_ITER
       tic_iter = chrono::steady_clock::now();
