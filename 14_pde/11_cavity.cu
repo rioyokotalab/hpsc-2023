@@ -72,6 +72,38 @@ __global__ void boundary_p_x(double **p, int ny, int nx) {
   p[ny - 1][i] = 0;
 }
 
+__global__ void update_u(double **u, double **un, double **p, int dt, int dy,
+    int dx, int ny, int nx) {
+  const int index = blockIdx.x * blockDim.x + threadIdx.x;
+  const int j = index / ny;
+  const int i = index % nx;
+  if (!(1 <= j && j < ny - 1))
+    return;
+  if (!(1 <= i && i < nx - 1))
+    return;
+  u[j][i] = (un[j][i] - un[j][i] * dt / dx * (un[j][i] - un[j][i - 1]) -
+             un[j][i] * dt / dy * (un[j][i] - un[j - 1][i]) -
+             dt / (2 * rho * dx) * (p[j][i + 1] - p[j][i - 1]) +
+             nu * dt / dx * dx * (un[j][i + 1] - 2 * un[j][i] + un[j][i - 1]) +
+             nu * dt / dy * dy * (un[j + 1][i] - 2 * un[j][i] + un[j - 1][i]));
+}
+
+__global__ void update_v(double **v, double **vn, double **p, int dt, int dy,
+    int dx, int ny, int nx) {
+  const int index = blockIdx.x * blockDim.x + threadIdx.x;
+  const int j = index / ny;
+  const int i = index % nx;
+  if (!(1 <= j && j < ny - 1))
+    return;
+  if (!(1 <= i && i < nx - 1))
+    return;
+  v[j][i] = (vn[j][i] - vn[j][i] * dt / dx * (vn[j][i] - vn[j][i - 1]) -
+             vn[j][i] * dt / dy * (vn[j][i] - vn[j - 1][i]) -
+             dt / (2 * rho * dx) * (p[j + 1][i] - p[j - 1][i]) +
+             nu * dt / dx * dx * (vn[j][i + 1] - 2 * vn[j][i] + vn[j][i - 1]) +
+             nu * dt / dy * dy * (vn[j + 1][i] - 2 * vn[j][i] + vn[j - 1][i]));
+}
+
 int main() {
   const int nx = 161;
   const int ny = 161;
@@ -200,24 +232,26 @@ int main() {
 #ifdef DEBUG
     tic = chrono::steady_clock::now();
 #endif // DEBUG
-    for (int j = 1; j < ny - 1; j++) {
-      for (int i = 1; i < nx - 1; i++) {
-        u[j][i] = (un[j][i] - un[j][i] * dt / dx * (un[j][i] - un[j][i - 1]) -
-                   un[j][i] * dt / dy * (un[j][i] - un[j - 1][i]) -
-                   dt / (2 * rho * dx) * (p[j][i + 1] - p[j][i - 1]) +
-                   nu * dt / dx * dx *
-                       (un[j][i + 1] - 2 * un[j][i] + un[j][i - 1]) +
-                   nu * dt / dy * dy *
-                       (un[j + 1][i] - 2 * un[j][i] + un[j - 1][i]));
-        v[j][i] = (vn[j][i] - vn[j][i] * dt / dx * (vn[j][i] - vn[j][i - 1]) -
-                   vn[j][i] * dt / dy * (vn[j][i] - vn[j - 1][i]) -
-                   dt / (2 * rho * dx) * (p[j + 1][i] - p[j - 1][i]) +
-                   nu * dt / dx * dx *
-                       (vn[j][i + 1] - 2 * vn[j][i] + vn[j][i - 1]) +
-                   nu * dt / dy * dy *
-                       (vn[j + 1][i] - 2 * vn[j][i] + vn[j - 1][i]));
-      }
-    }
+    // for (int j = 1; j < ny - 1; j++) {
+    //   for (int i = 1; i < nx - 1; i++) {
+    //     u[j][i] = (un[j][i] - un[j][i] * dt / dx * (un[j][i] - un[j][i - 1]) -
+    //                un[j][i] * dt / dy * (un[j][i] - un[j - 1][i]) -
+    //                dt / (2 * rho * dx) * (p[j][i + 1] - p[j][i - 1]) +
+    //                nu * dt / dx * dx *
+    //                    (un[j][i + 1] - 2 * un[j][i] + un[j][i - 1]) +
+    //                nu * dt / dy * dy *
+    //                    (un[j + 1][i] - 2 * un[j][i] + un[j - 1][i]));
+    //     v[j][i] = (vn[j][i] - vn[j][i] * dt / dx * (vn[j][i] - vn[j][i - 1]) -
+    //                vn[j][i] * dt / dy * (vn[j][i] - vn[j - 1][i]) -
+    //                dt / (2 * rho * dx) * (p[j + 1][i] - p[j - 1][i]) +
+    //                nu * dt / dx * dx *
+    //                    (vn[j][i + 1] - 2 * vn[j][i] + vn[j][i - 1]) +
+    //                nu * dt / dy * dy *
+    //                    (vn[j + 1][i] - 2 * vn[j][i] + vn[j - 1][i]));
+    //   }
+    // }
+    update_u<<<BLOCKS(nx * ny), M>>>(u, un, p, dt, dy, dx, ny, nx);
+    update_v<<<BLOCKS(nx * ny), M>>>(v, vn, p, dt, dy, dx, ny, nx);
 #ifdef DEBUG
     toc = chrono::steady_clock::now();
     time = chrono::duration<double>(toc - tic).count();
