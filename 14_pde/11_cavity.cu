@@ -240,24 +240,6 @@ int main() {
 #ifdef DEBUG
     tic = chrono::steady_clock::now();
 #endif // DEBUG
-    // for (int j = 1; j < ny - 1; j++) {
-    //   for (int i = 1; i < nx - 1; i++) {
-    //     u[j][i] = (un[j][i] - un[j][i] * dt / dx * (un[j][i] - un[j][i - 1]) -
-    //                un[j][i] * dt / dy * (un[j][i] - un[j - 1][i]) -
-    //                dt / (2 * rho * dx) * (p[j][i + 1] - p[j][i - 1]) +
-    //                nu * dt / dx * dx *
-    //                    (un[j][i + 1] - 2 * un[j][i] + un[j][i - 1]) +
-    //                nu * dt / dy * dy *
-    //                    (un[j + 1][i] - 2 * un[j][i] + un[j - 1][i]));
-    //     v[j][i] = (vn[j][i] - vn[j][i] * dt / dx * (vn[j][i] - vn[j][i - 1]) -
-    //                vn[j][i] * dt / dy * (vn[j][i] - vn[j - 1][i]) -
-    //                dt / (2 * rho * dx) * (p[j + 1][i] - p[j - 1][i]) +
-    //                nu * dt / dx * dx *
-    //                    (vn[j][i + 1] - 2 * vn[j][i] + vn[j][i - 1]) +
-    //                nu * dt / dy * dy *
-    //                    (vn[j + 1][i] - 2 * vn[j][i] + vn[j - 1][i]));
-    //   }
-    // }
     update_u<<<BLOCKS(nx * ny), M>>>(u, un, p, dt, dy, dx, ny, nx, rho, nu);
     update_v<<<BLOCKS(nx * ny), M>>>(v, vn, p, dt, dy, dx, ny, nx, rho, nu);
 #ifdef DEBUG
