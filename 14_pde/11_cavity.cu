@@ -141,7 +141,6 @@ int main() {
   double **p; // cuda
   double **b; // cuda
 
-  // mat pn(ny, arr(nx, 0));
   double **pn; // cuda
   double **un;
   double **vn;
@@ -155,7 +154,7 @@ int main() {
   matalloc(&un, ny, nx);
   matalloc(&vn, ny, nx);
 
-  // initialize cuda-related arrays
+  // initialize cuda-related mat
   init_zeros<<<BLOCKS(ny * nx), M>>>(p, ny, nx);
   init_zeros<<<BLOCKS(ny * nx), M>>>(pn, ny, nx);
   init_zeros<<<BLOCKS(ny * nx), M>>>(b, ny, nx);
