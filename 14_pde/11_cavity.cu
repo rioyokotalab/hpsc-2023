@@ -7,7 +7,8 @@ using namespace std;
 typedef vector<double> arr;
 typedef vector<arr> mat;
 
-// #define DEBUG 0
+#define DEBUG 0
+// #define DEBUG_ITER 0
 
 const int M = 1024; // num of threads per block
 #define BLOCKS(n_loop) (n_loop + M - 1) / M
@@ -85,9 +86,7 @@ int main() {
   vector<double> x(nx), y(ny);
   mat u(ny, arr(nx, 0));
   mat v(ny, arr(nx, 0));
-  // mat p(ny, arr(nx, 0));
   double **p; // cuda
-  // mat b(ny, arr(nx, 0));
   double **b; // cuda
 
   // mat pn(ny, arr(nx, 0));
@@ -111,10 +110,15 @@ int main() {
   for (int j = 0; j < ny; j++)
     y[j] = j * dy;
 #ifdef DEBUG
-  chrono::steady_clock::time_point tic, tic_iter;
-  chrono::steady_clock::time_point toc, toc_iter;
+  chrono::steady_clock::time_point tic;
+  chrono::steady_clock::time_point toc;
   double time;
 #endif // DEBUG
+#ifdef DEBUG_ITER
+  chrono::steady_clock::time_point tic_iter;
+  chrono::steady_clock::time_point toc_iter;
+  double time_iter;
+#endif // DEBUG_ITER
 
   // main for, do not apply openmp
   for (int n = 0; n < nt; n++) {
@@ -145,59 +149,37 @@ int main() {
 #endif // DEBUG
     // iteration : do not apply openmp
     for (int it = 0; it < nit; it++) {
-#ifdef DEBUG
+#ifdef DEBUG_ITER
       tic_iter = chrono::steady_clock::now();
-#endif // DEBUG
+#endif // DEBUG_ITER
       // copy p to pn
-      // pn = p;  // is this ok?
-      // for (int j = 1; j < ny - 1; j++) {
-      //   for (int i = 1; i < nx - 1; i++) {
-      //     pn[j][i] = p[j][i];
-      //   }
-      // }
       copy_p_pn<<<BLOCKS(nx * ny), M>>>(p, pn, ny, nx);
-#ifdef DEBUG
+#ifdef DEBUG_ITER
       toc_iter = chrono::steady_clock::now();
-      time = chrono::duration<double>(toc_iter - tic_iter).count();
-      cout << "iteration loop copy p to pn : " << time << endl;
-#endif // DEBUG
-#ifdef DEBUG
+      time_iter = chrono::duration<double>(toc_iter - tic_iter).count();
+      cout << "iteration loop copy p to pn : " << time_iter << endl;
+#endif // DEBUG_ITER
+#ifdef DEBUG_ITER
       tic_iter = chrono::steady_clock::now();
-#endif // DEBUG
-      // TODO: optimize this loop!!
-      // for (int j = 1; j < ny - 1; j++) {
-      //   for (int i = 1; i < nx - 1; i++) {
-      //     p[j][i] = (dy * dy * (pn[j][i + 1] + pn[j][i - 1]) +
-      //                   dx * dx * (pn[j + 1][i] + pn[j - 1][i]) -
-      //                   b[j][i] * dx * dx * dy * dy) /
-      //               (2 * (dx * dx + dy * dy));
-      //   }
+#endif // DEBUG_ITER
       // }
       update_p<<<BLOCKS(nx * ny), M>>>(p, pn, b, dy, dx, ny, nx);
-#ifdef DEBUG
+#ifdef DEBUG_ITER
       toc_iter = chrono::steady_clock::now();
-      time = chrono::duration<double>(toc_iter - tic_iter).count();
-      cout << "iteration loop update p     : " << time << endl;
-#endif // DEBUG
+      time_iter = chrono::duration<double>(toc_iter - tic_iter).count();
+      cout << "iteration loop update p     : " << time_iter << endl;
+#endif // DEBUG_ITER
 
-#ifdef DEBUG
+#ifdef DEBUG_ITER
       tic_iter = chrono::steady_clock::now();
-#endif // DEBUG
-      // for (int j = 0; j < ny; j++) {
-      //   p[j][nx - 1] = p[j][nx - 2];
-      //   p[j][0] = p[j][1];
-      // }
+#endif // DEBUG_ITER
       boundary_p_y<<<BLOCKS(nx * ny), M>>>(p, ny, nx);
-      // for (int i = 0; i < nx; i++) {
-      //   p[0][i] = p[1][i];
-      //   p[ny - 1][i] = 0;
-      // }
       boundary_p_x<<<BLOCKS(nx * ny), M>>>(p, ny, nx);
-#ifdef DEBUG
+#ifdef DEBUG_ITER
       toc_iter = chrono::steady_clock::now();
-      time = chrono::duration<double>(toc_iter - tic_iter).count();
-      cout << "iteration loop boundary of p: " << time << endl;
-#endif // DEBUG
+      time_iter = chrono::duration<double>(toc_iter - tic_iter).count();
+      cout << "iteration loop boundary of p: " << time_iter << endl;
+#endif // DEBUG_ITER
     }
 #ifdef DEBUG
     toc = chrono::steady_clock::now();
