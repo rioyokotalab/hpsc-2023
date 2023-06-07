@@ -144,6 +144,10 @@ int main() {
   double **un;
   double **vn;
 
+#ifdef DEBUG
+    tic = chrono::steady_clock::now();
+#endif // DEBUG
+
   // allocate cuda-related arrays
   matalloc(&p, ny, nx);
   matalloc(&pn, ny, nx);
@@ -161,6 +165,12 @@ int main() {
   init_zeros<<<BLOCKS(ny * nx), M>>>(v, ny, nx);
   init_zeros<<<BLOCKS(ny * nx), M>>>(un, ny, nx);
   init_zeros<<<BLOCKS(ny * nx), M>>>(vn, ny, nx);
+
+#ifdef DEBUG
+    toc = chrono::steady_clock::now();
+    time = chrono::duration<double>(toc - tic).count();
+    cout << "allocation-related: " << time << endl;
+#endif // DEBUG
 
 #ifdef DEBUG
   chrono::steady_clock::time_point tic;
