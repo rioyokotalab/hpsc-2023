@@ -13,11 +13,8 @@ typedef vector<arr> mat;
 const int M = 1024; // num of threads per block
 #define BLOCKS(n_loop) (n_loop + M - 1) / M
 
-void matalloc(double ***ptr, int ny, int nx) {
-  cudaMallocManaged(ptr, ny * sizeof(double *));
-  for (int j = 0; j < ny; j++) {
-    cudaMallocManaged(&(*ptr)[j], nx * sizeof(double));
-  }
+void matalloc(double **ptr, int ny, int nx) {
+  cudaMallocManaged(ptr, ny * nx * sizeof(double));
 }
 
 __global__ void init_zeros(double **a, int ny, int nx) {
@@ -28,7 +25,7 @@ __global__ void init_zeros(double **a, int ny, int nx) {
     return;
   if (i >= nx)
     return;
-  a[j][i] = 0;
+  a[(j)*nx + i] = 0;
 }
 
 __global__ void matcopy(double **src, double **dst, int ny, int nx) {
@@ -39,7 +36,7 @@ __global__ void matcopy(double **src, double **dst, int ny, int nx) {
     return;
   if (!(1 <= i && i < nx - 1))
     return;
-  dst[j][i] = src[j][i];
+  dst[(j)*nx + i] = src[(j)*nx + i];
 }
 
 __global__ void update_b(double **b, double **u, double **v, int dt, int dy,
@@ -51,15 +48,17 @@ __global__ void update_b(double **b, double **u, double **v, int dt, int dy,
     return;
   if (!(1 <= i && i < nx - 1))
     return;
-  b[j][i] = rho * (1 / dt *
-                          ((u[j][i + 1] - u[j][i - 1]) / (2 * dx) +
-                              (v[j + 1][i] - v[j - 1][i]) / (2 * dy)) -
-                      ((u[j][i + 1] - u[j][i - 1]) / (2 * dx)) *
-                          ((u[j][i + 1] - u[j][i - 1]) / (2 * dx)) -
-                      2 * ((u[j + 1][i] - u[j - 1][i]) / (2 * dy) *
-                              (v[j][i + 1] - v[j][i - 1]) / (2 * dx)) -
-                      ((v[j + 1][i] - v[j - 1][i]) / (2 * dy)) *
-                          ((v[j + 1][i] - v[j - 1][i]) / (2 * dy)));
+  b[(j)*nx + i] =
+      rho *
+      (1 / dt *
+              ((u[(j)*nx + i + 1] - u[(j)*nx + i - 1]) / (2 * dx) +
+                  (v[(j + 1) * nx + i] - v[(j - 1) * nx + i]) / (2 * dy)) -
+          ((u[(j)*nx + i + 1] - u[(j)*nx + i - 1]) / (2 * dx)) *
+              ((u[(j)*nx + i + 1] - u[(j)*nx + i - 1]) / (2 * dx)) -
+          2 * ((u[(j + 1) * nx + i] - u[(j - 1) * nx + i]) / (2 * dy) *
+                  (v[(j)*nx + i + 1] - v[(j)*nx + i - 1]) / (2 * dx)) -
+          ((v[(j + 1) * nx + i] - v[(j - 1) * nx + i]) / (2 * dy)) *
+              ((v[(j + 1) * nx + i] - v[(j - 1) * nx + i]) / (2 * dy)));
 }
 
 __global__ void update_p(
@@ -71,25 +70,25 @@ __global__ void update_p(
     return;
   if (!(1 <= i && i < nx - 1))
     return;
-  p[j][i] = (dy * dy * (pn[j][i + 1] + pn[j][i - 1]) +
-                dx * dx * (pn[j + 1][i] + pn[j - 1][i]) -
-                b[j][i] * dx * dx * dy * dy) /
-            (2 * (dx * dx + dy * dy));
+  p[(j)*nx + i] = (dy * dy * (pn[(j)*nx + i + 1] + pn[(j)*nx + i - 1]) +
+                      dx * dx * (pn[(j + 1) * nx + i] + pn[(j - 1) * nx + i]) -
+                      b[(j)*nx + i] * dx * dx * dy * dy) /
+                  (2 * (dx * dx + dy * dy));
 }
 
 __global__ void boundary_p_y(double **p, int ny, int nx) {
   const int j = blockIdx.x * blockDim.x + threadIdx.x;
   if (j >= ny)
     return;
-  p[j][nx - 1] = p[j][nx - 2];
-  p[j][0] = p[j][1];
+  p[(j)*nx + nx - 1] = p[(j)*nx + nx - 2];
+  p[(j)*nx + 0] = p[(j)*nx + 1];
 }
 __global__ void boundary_p_x(double **p, int ny, int nx) {
   const int i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i >= nx)
     return;
-  p[0][i] = p[1][i];
-  p[ny - 1][i] = 0;
+  p[(0) * nx + i] = p[(1) * nx + i];
+  p[(ny - 1) * nx + i] = 0;
 }
 
 __global__ void update_u(double **u, double **un, double **p, int dt, int dy,
@@ -101,11 +100,16 @@ __global__ void update_u(double **u, double **un, double **p, int dt, int dy,
     return;
   if (!(1 <= i && i < nx - 1))
     return;
-  u[j][i] = (un[j][i] - un[j][i] * dt / dx * (un[j][i] - un[j][i - 1]) -
-             un[j][i] * dt / dy * (un[j][i] - un[j - 1][i]) -
-             dt / (2 * rho * dx) * (p[j][i + 1] - p[j][i - 1]) +
-             nu * dt / dx * dx * (un[j][i + 1] - 2 * un[j][i] + un[j][i - 1]) +
-             nu * dt / dy * dy * (un[j + 1][i] - 2 * un[j][i] + un[j - 1][i]));
+  u[(j)*nx + i] =
+      (un[(j)*nx + i] -
+          un[(j)*nx + i] * dt / dx * (un[(j)*nx + i] - un[(j)*nx + i - 1]) -
+          un[(j)*nx + i] * dt / dy * (un[(j)*nx + i] - un[(j - 1) * nx + i]) -
+          dt / (2 * rho * dx) * (p[(j)*nx + i + 1] - p[(j)*nx + i - 1]) +
+          nu * dt / dx * dx *
+              (un[(j)*nx + i + 1] - 2 * un[(j)*nx + i] + un[(j)*nx + i - 1]) +
+          nu * dt / dy * dy *
+              (un[(j + 1) * nx + i] - 2 * un[(j)*nx + i] +
+                  un[(j - 1) * nx + i]));
 }
 
 __global__ void update_v(double **v, double **vn, double **p, int dt, int dy,
@@ -117,31 +121,36 @@ __global__ void update_v(double **v, double **vn, double **p, int dt, int dy,
     return;
   if (!(1 <= i && i < nx - 1))
     return;
-  v[j][i] = (vn[j][i] - vn[j][i] * dt / dx * (vn[j][i] - vn[j][i - 1]) -
-             vn[j][i] * dt / dy * (vn[j][i] - vn[j - 1][i]) -
-             dt / (2 * rho * dx) * (p[j + 1][i] - p[j - 1][i]) +
-             nu * dt / dx * dx * (vn[j][i + 1] - 2 * vn[j][i] + vn[j][i - 1]) +
-             nu * dt / dy * dy * (vn[j + 1][i] - 2 * vn[j][i] + vn[j - 1][i]));
+  v[(j)*nx + i] =
+      (vn[(j)*nx + i] -
+          vn[(j)*nx + i] * dt / dx * (vn[(j)*nx + i] - vn[(j)*nx + i - 1]) -
+          vn[(j)*nx + i] * dt / dy * (vn[(j)*nx + i] - vn[(j - 1) * nx + i]) -
+          dt / (2 * rho * dx) * (p[(j + 1) * nx + i] - p[(j - 1) * nx + i]) +
+          nu * dt / dx * dx *
+              (vn[(j)*nx + i + 1] - 2 * vn[(j)*nx + i] + vn[(j)*nx + i - 1]) +
+          nu * dt / dy * dy *
+              (vn[(j + 1) * nx + i] - 2 * vn[(j)*nx + i] +
+                  vn[(j - 1) * nx + i]));
 }
 
 __global__ void boundary_u_v_y(double **u, double **v, int ny, int nx) {
   const int j = blockIdx.x * blockDim.x + threadIdx.x;
   if (j >= ny)
     return;
-  u[j][0] = 0;
-  u[j][nx - 1] = 0;
-  v[j][0] = 0;
-  v[j][nx - 1] = 0;
+  u[(j)*nx + 0] = 0;
+  u[(j)*nx + nx - 1] = 0;
+  v[(j)*nx + 0] = 0;
+  v[(j)*nx + nx - 1] = 0;
 }
 
 __global__ void boundary_u_v_x(double **u, double **v, int ny, int nx) {
   const int i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i >= nx)
     return;
-  u[0][i] = 0;
-  u[ny - 1][i] = 1;
-  v[0][i] = 0;
-  v[ny - 1][i] = 0;
+  u[(0) * nx + i] = 0;
+  u[(ny - 1) * nx + i] = 1;
+  v[(0) * nx + i] = 0;
+  v[(ny - 1) * nx + i] = 0;
 }
 
 int main() {
@@ -155,14 +164,14 @@ int main() {
   double rho = 1;
   double nu = 0.02;
 
-  double **u;
-  double **v;
-  double **p; // cuda
-  double **b; // cuda
+  double *u;
+  double *v;
+  double *p; // cuda
+  double *b; // cuda
 
-  double **pn; // cuda
-  double **un;
-  double **vn;
+  double *pn; // cuda
+  double *un;
+  double *vn;
 
 #ifdef DEBUG
   chrono::steady_clock::time_point tic;
