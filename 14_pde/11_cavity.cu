@@ -41,6 +41,21 @@ __global__ void copy_p_pn(double **p, double **pn, int ny, int nx) {
   pn[j][i] = p[j][i];
 }
 
+__global__ void update_p(
+    double **p, double **pn, double **b, int dy, int dx, int ny, int nx) {
+  const int index = blockIdx.x * blockDim.x + threadIdx.x;
+  const int j = index / ny;
+  const int i = index % nx;
+  if (!(1 <= j && j < ny - 1))
+    return;
+  if (!(1 <= i && i < nx - 1))
+    return;
+  p[j][i] = (dy * dy * (pn[j][i + 1] + pn[j][i - 1]) +
+                dx * dx * (pn[j + 1][i] + pn[j - 1][i]) -
+                b[j][i] * dx * dx * dy * dy) /
+            (2 * (dx * dx + dy * dy));
+}
+
 int main() {
   const int nx = 161;
   const int ny = 161;
@@ -135,14 +150,15 @@ int main() {
       tic_iter = chrono::steady_clock::now();
 #endif // DEBUG
       // TODO: optimize this loop!!
-      for (int j = 1; j < ny - 1; j++) {
-        for (int i = 1; i < nx - 1; i++) {
-          p[j][i] = (dy * dy * (pn[j][i + 1] + pn[j][i - 1]) +
-                        dx * dx * (pn[j + 1][i] + pn[j - 1][i]) -
-                        b[j][i] * dx * dx * dy * dy) /
-                    (2 * (dx * dx + dy * dy));
-        }
-      }
+      // for (int j = 1; j < ny - 1; j++) {
+      //   for (int i = 1; i < nx - 1; i++) {
+      //     p[j][i] = (dy * dy * (pn[j][i + 1] + pn[j][i - 1]) +
+      //                   dx * dx * (pn[j + 1][i] + pn[j - 1][i]) -
+      //                   b[j][i] * dx * dx * dy * dy) /
+      //               (2 * (dx * dx + dy * dy));
+      //   }
+      // }
+      update_p<<<BLOCKS(nx * ny), M>>>(p, pn, b, dy, dx, ny, nx);
 #ifdef DEBUG
       toc_iter = chrono::steady_clock::now();
       time = chrono::duration<double>(toc_iter - tic_iter).count();
