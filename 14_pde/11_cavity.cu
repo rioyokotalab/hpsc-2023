@@ -31,7 +31,7 @@ __global__ void init_zeros(double **a, int ny, int nx) {
   a[j][i] = 0;
 }
 
-__global__ void copy_p_pn(double **p, double **pn, int ny, int nx) {
+__global__ void matcopy(double **src, double **dst, int ny, int nx) {
   const int index = blockIdx.x * blockDim.x + threadIdx.x;
   const int j = index / ny;
   const int i = index % nx;
@@ -39,7 +39,7 @@ __global__ void copy_p_pn(double **p, double **pn, int ny, int nx) {
     return;
   if (!(1 <= i && i < nx - 1))
     return;
-  pn[j][i] = p[j][i];
+  dst[j][i] = src[j][i];
 }
 
 __global__ void update_p(
@@ -153,7 +153,7 @@ int main() {
       tic_iter = chrono::steady_clock::now();
 #endif // DEBUG_ITER
       // copy p to pn
-      copy_p_pn<<<BLOCKS(nx * ny), M>>>(p, pn, ny, nx);
+      matcopy<<<BLOCKS(nx * ny), M>>>(p, pn, ny, nx);
 #ifdef DEBUG_ITER
       toc_iter = chrono::steady_clock::now();
       time_iter = chrono::duration<double>(toc_iter - tic_iter).count();
@@ -190,14 +190,8 @@ int main() {
 #ifdef DEBUG
     tic = chrono::steady_clock::now();
 #endif // DEBUG
-    // un = u.copy()
-    // vn = v.copy()
-    for (int j = 1; j < ny - 1; j++) {
-      for (int i = 1; i < nx - 1; i++) {
-        un[j][i] = u[j][i];
-        vn[j][i] = v[j][i];
-      }
-    }
+    matcopy<<<BLOCKS(nx * ny), M>>>(u, un, ny, nx);
+    matcopy<<<BLOCKS(nx * ny), M>>>(v, vn, ny, nx);
 #ifdef DEBUG
     toc = chrono::steady_clock::now();
     time = chrono::duration<double>(toc - tic).count();
