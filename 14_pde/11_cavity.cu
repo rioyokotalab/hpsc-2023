@@ -57,7 +57,8 @@ int main() {
   mat v(ny, arr(nx, 0));
   // mat p(ny, arr(nx, 0));
   double **p; // cuda
-  mat b(ny, arr(nx, 0));
+  // mat b(ny, arr(nx, 0));
+  duoble **b; // cuda
 
   // mat pn(ny, arr(nx, 0));
   double **pn; // cuda
@@ -67,10 +68,12 @@ int main() {
   // allocate cuda-related arrays
   matalloc(&p, ny, nx);
   matalloc(&pn, ny, nx);
+  matalloc(&b, ny, nx);
 
   // initialize cuda-related arrays
   init_zeros<<<BLOCKS(ny * nx), M>>>(p, ny, nx);
   init_zeros<<<BLOCKS(ny * nx), M>>>(pn, ny, nx);
+  init_zeros<<<BLOCKS(ny * nx), M>>>(b, ny, nx);
 
   // initialize x and y
   for (int i = 0; i < nx; i++)
