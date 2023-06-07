@@ -13,7 +13,7 @@ typedef vector<arr> mat;
 const int M = 1024; // num of threads per block
 #define BLOCKS(n_loop) (n_loop + M - 1) / M
 
-void matalloc(double *ptr, int ny, int nx) {
+void matalloc(double **ptr, int ny, int nx) {
   cudaMallocManaged(ptr, ny * nx * sizeof(double));
 }
 
