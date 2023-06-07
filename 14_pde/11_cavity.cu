@@ -42,6 +42,26 @@ __global__ void matcopy(double **src, double **dst, int ny, int nx) {
   dst[j][i] = src[j][i];
 }
 
+__global__ void update_b(double **b, double **u, double **v, int dt, int dy,
+    int dx, int ny, int nx, double rho) {
+  const int index = blockIdx.x * blockDim.x + threadIdx.x;
+  const int j = index / ny;
+  const int i = index % nx;
+  if (!(1 <= j && j < ny - 1))
+    return;
+  if (!(1 <= i && i < nx - 1))
+    return;
+  b[j][i] = rho * (1 / dt *
+                          ((u[j][i + 1] - u[j][i - 1]) / (2 * dx) +
+                              (v[j + 1][i] - v[j - 1][i]) / (2 * dy)) -
+                      ((u[j][i + 1] - u[j][i - 1]) / (2 * dx)) *
+                          ((u[j][i + 1] - u[j][i - 1]) / (2 * dx)) -
+                      2 * ((u[j + 1][i] - u[j - 1][i]) / (2 * dy) *
+                              (v[j][i + 1] - v[j][i - 1]) / (2 * dx)) -
+                      ((v[j + 1][i] - v[j - 1][i]) / (2 * dy)) *
+                          ((v[j + 1][i] - v[j - 1][i]) / (2 * dy)));
+}
+
 __global__ void update_p(
     double **p, double **pn, double **b, int dy, int dx, int ny, int nx) {
   const int index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -190,19 +210,7 @@ int main() {
     cout << "n:" << n << endl;
     tic = chrono::steady_clock::now();
 #endif // DEBUG
-    for (int j = 1; j < ny - 1; j++) {
-      for (int i = 1; i < nx - 1; i++) {
-        b[j][i] = rho * (1 / dt *
-                                ((u[j][i + 1] - u[j][i - 1]) / (2 * dx) +
-                                    (v[j + 1][i] - v[j - 1][i]) / (2 * dy)) -
-                            ((u[j][i + 1] - u[j][i - 1]) / (2 * dx)) *
-                                ((u[j][i + 1] - u[j][i - 1]) / (2 * dx)) -
-                            2 * ((u[j + 1][i] - u[j - 1][i]) / (2 * dy) *
-                                    (v[j][i + 1] - v[j][i - 1]) / (2 * dx)) -
-                            ((v[j + 1][i] - v[j - 1][i]) / (2 * dy)) *
-                                ((v[j + 1][i] - v[j - 1][i]) / (2 * dy)));
-      }
-    }
+    update_b<<<BLOCKS(nx * ny), M>>>(b, u, v, dt, dy, dx, ny, nx, rho);
 #ifdef DEBUG
     toc = chrono::steady_clock::now();
     time = chrono::duration<double>(toc - tic).count();
