@@ -116,13 +116,13 @@ int main() {
       tic_iter = chrono::steady_clock::now();
 #endif // DEBUG
       // copy p to pn
-      // pn = p;  // is this ok?
-      // for (int j = 1; j < ny - 1; j++) {
-      //   for (int i = 1; i < nx - 1; i++) {
-      //     pn[j][i] = p[j][i];
-      //   }
-      // }
-      copy_p_pn<<<BLOCKS(nx * ny), M>>>(p, pn, ny, nx);
+      pn = p;  // is this ok?
+      for (int j = 1; j < ny - 1; j++) {
+        for (int i = 1; i < nx - 1; i++) {
+          pn[j][i] = p[j][i];
+        }
+      }
+      // copy_p_pn<<<BLOCKS(nx * ny), M>>>(p, pn, ny, nx);
 #ifdef DEBUG
       toc_iter = chrono::steady_clock::now();
       time = chrono::duration<double>(toc_iter - tic_iter).count();
