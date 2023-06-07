@@ -13,11 +13,11 @@ typedef vector<arr> mat;
 const int M = 1024; // num of threads per block
 #define BLOCKS(n_loop) (n_loop + M - 1) / M
 
-void matalloc(double **ptr, int ny, int nx) {
+void matalloc(double *ptr, int ny, int nx) {
   cudaMallocManaged(ptr, ny * nx * sizeof(double));
 }
 
-__global__ void init_zeros(double **a, int ny, int nx) {
+__global__ void init_zeros(double *a, int ny, int nx) {
   const int index = blockIdx.x * blockDim.x + threadIdx.x;
   const int j = index / ny;
   const int i = index % nx;
@@ -28,7 +28,7 @@ __global__ void init_zeros(double **a, int ny, int nx) {
   a[(j)*nx + i] = 0;
 }
 
-__global__ void matcopy(double **src, double **dst, int ny, int nx) {
+__global__ void matcopy(double *src, double *dst, int ny, int nx) {
   const int index = blockIdx.x * blockDim.x + threadIdx.x;
   const int j = index / ny;
   const int i = index % nx;
@@ -39,7 +39,7 @@ __global__ void matcopy(double **src, double **dst, int ny, int nx) {
   dst[(j)*nx + i] = src[(j)*nx + i];
 }
 
-__global__ void update_b(double **b, double **u, double **v, int dt, int dy,
+__global__ void update_b(double *b, double *u, double *v, int dt, int dy,
     int dx, int ny, int nx, double rho) {
   const int index = blockIdx.x * blockDim.x + threadIdx.x;
   const int j = index / ny;
@@ -62,7 +62,7 @@ __global__ void update_b(double **b, double **u, double **v, int dt, int dy,
 }
 
 __global__ void update_p(
-    double **p, double **pn, double **b, int dy, int dx, int ny, int nx) {
+    double *p, double *pn, double *b, int dy, int dx, int ny, int nx) {
   const int index = blockIdx.x * blockDim.x + threadIdx.x;
   const int j = index / ny;
   const int i = index % nx;
@@ -76,14 +76,14 @@ __global__ void update_p(
                   (2 * (dx * dx + dy * dy));
 }
 
-__global__ void boundary_p_y(double **p, int ny, int nx) {
+__global__ void boundary_p_y(double *p, int ny, int nx) {
   const int j = blockIdx.x * blockDim.x + threadIdx.x;
   if (j >= ny)
     return;
   p[(j)*nx + nx - 1] = p[(j)*nx + nx - 2];
   p[(j)*nx + 0] = p[(j)*nx + 1];
 }
-__global__ void boundary_p_x(double **p, int ny, int nx) {
+__global__ void boundary_p_x(double *p, int ny, int nx) {
   const int i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i >= nx)
     return;
@@ -91,7 +91,7 @@ __global__ void boundary_p_x(double **p, int ny, int nx) {
   p[(ny - 1) * nx + i] = 0;
 }
 
-__global__ void update_u(double **u, double **un, double **p, int dt, int dy,
+__global__ void update_u(double *u, double *un, double *p, int dt, int dy,
     int dx, int ny, int nx, double rho, double nu) {
   const int index = blockIdx.x * blockDim.x + threadIdx.x;
   const int j = index / ny;
@@ -112,7 +112,7 @@ __global__ void update_u(double **u, double **un, double **p, int dt, int dy,
                   un[(j - 1) * nx + i]));
 }
 
-__global__ void update_v(double **v, double **vn, double **p, int dt, int dy,
+__global__ void update_v(double *v, double *vn, double *p, int dt, int dy,
     int dx, int ny, int nx, double rho, double nu) {
   const int index = blockIdx.x * blockDim.x + threadIdx.x;
   const int j = index / ny;
@@ -133,7 +133,7 @@ __global__ void update_v(double **v, double **vn, double **p, int dt, int dy,
                   vn[(j - 1) * nx + i]));
 }
 
-__global__ void boundary_u_v_y(double **u, double **v, int ny, int nx) {
+__global__ void boundary_u_v_y(double *u, double *v, int ny, int nx) {
   const int j = blockIdx.x * blockDim.x + threadIdx.x;
   if (j >= ny)
     return;
@@ -143,7 +143,7 @@ __global__ void boundary_u_v_y(double **u, double **v, int ny, int nx) {
   v[(j)*nx + nx - 1] = 0;
 }
 
-__global__ void boundary_u_v_x(double **u, double **v, int ny, int nx) {
+__global__ void boundary_u_v_x(double *u, double *v, int ny, int nx) {
   const int i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i >= nx)
     return;
