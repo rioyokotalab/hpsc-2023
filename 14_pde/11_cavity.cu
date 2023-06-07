@@ -104,6 +104,26 @@ __global__ void update_v(double **v, double **vn, double **p, int dt, int dy,
              nu * dt / dy * dy * (vn[j + 1][i] - 2 * vn[j][i] + vn[j - 1][i]));
 }
 
+__global__ void boundary_u_v_y(double **u, double **v, int ny, int nx) {
+  const int j = blockIdx.x * blockDim.x + threadIdx.x;
+  if (j >= ny)
+    return;
+  u[j][0] = 0;
+  u[j][nx - 1] = 0;
+  v[j][0] = 0;
+  v[j][nx - 1] = 0;
+}
+
+__global__ void boundary_u_v_x(double **u, double **v, int ny, int nx) {
+  const int i = blockIdx.x * blockDim.x + threadIdx.x;
+  if (i >= nx)
+    return;
+  u[0][i] = 0;
+  u[ny - 1][i] = 1;
+  v[0][i] = 0;
+  v[ny - 1][i] = 0;
+}
+
 int main() {
   const int nx = 161;
   const int ny = 161;
@@ -250,18 +270,8 @@ int main() {
 #ifdef DEBUG
     tic = chrono::steady_clock::now();
 #endif // DEBUG
-    for (int j = 0; j < ny; j++) {
-      u[j][0] = 0;
-      u[j][nx - 1] = 0;
-      v[j][0] = 0;
-      v[j][nx - 1] = 0;
-    }
-    for (int i = 0; i < nx; i++) {
-      u[0][i] = 0;
-      u[ny - 1][i] = 1;
-      v[0][i] = 0;
-      v[ny - 1][i] = 0;
-    }
+    boundary_u_v_y<<<BLOCKS(nx * ny), M>>>(u, v, ny, nx);
+    boundary_u_v_x<<<BLOCKS(nx * ny), M>>>(u, v, ny, nx);
 #ifdef DEBUG
     toc = chrono::steady_clock::now();
     time = chrono::duration<double>(toc - tic).count();
