@@ -56,6 +56,21 @@ __global__ void update_p(
             (2 * (dx * dx + dy * dy));
 }
 
+__global__ void boundary_p_y(double **p, int ny, int nx) {
+  const int j = blockIdx.x * blockDim.x + threadIdx.x;
+  if (j >= ny)
+    return;
+  p[j][nx - 1] = p[j][nx - 2];
+  p[j][0] = p[j][1];
+}
+__global__ void boundary_p_x(double **p, int ny, int nx) {
+  const int i = blockIdx.x * blockDim.x + threadIdx.x;
+  if (i >= nx)
+    return;
+  p[0][i] = p[1][i];
+  p[ny - 1][i] = 0;
+}
+
 int main() {
   const int nx = 161;
   const int ny = 161;
@@ -168,14 +183,16 @@ int main() {
 #ifdef DEBUG
       tic_iter = chrono::steady_clock::now();
 #endif // DEBUG
-      for (int j = 0; j < ny; j++) {
-        p[j][nx - 1] = p[j][nx - 2];
-        p[j][0] = p[j][1];
-      }
-      for (int i = 0; i < nx; i++) {
-        p[0][i] = p[1][i];
-        p[ny - 1][i] = 0;
-      }
+      // for (int j = 0; j < ny; j++) {
+      //   p[j][nx - 1] = p[j][nx - 2];
+      //   p[j][0] = p[j][1];
+      // }
+      boundary_p_y<<<BLOCKS(nx * ny), M>>>(p, ny, nx);
+      // for (int i = 0; i < nx; i++) {
+      //   p[0][i] = p[1][i];
+      //   p[ny - 1][i] = 0;
+      // }
+      boundary_p_x<<<BLOCKS(nx * ny), M>>>(p, ny, nx);
 #ifdef DEBUG
       toc_iter = chrono::steady_clock::now();
       time = chrono::duration<double>(toc_iter - tic_iter).count();
