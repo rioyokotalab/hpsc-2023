@@ -197,6 +197,16 @@ int main() {
   matalloc(&un, ny, nx);
   matalloc(&vn, ny, nx);
 
+#ifdef DEBUG
+  toc = chrono::steady_clock::now();
+  time = chrono::duration<double>(toc - tic).count();
+  cout << "allocation        : " << time << endl;
+#endif // DEBUG
+
+#ifdef DEBUG
+  tic = chrono::steady_clock::now();
+#endif // DEBUG
+
   // initialize cuda-related mat
   init_zeros<<<BLOCKS(ny * nx), M>>>(p, ny, nx);
   init_zeros<<<BLOCKS(ny * nx), M>>>(pn, ny, nx);
@@ -210,7 +220,7 @@ int main() {
 #ifdef DEBUG
   toc = chrono::steady_clock::now();
   time = chrono::duration<double>(toc - tic).count();
-  cout << "allocation-related: " << time << endl;
+  cout << "initialization    : " << time << endl;
 #endif // DEBUG
 
   // main for, do not apply openmp
