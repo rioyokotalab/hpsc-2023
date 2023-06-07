@@ -135,7 +135,6 @@ int main() {
   double rho = 1;
   double nu = 0.02;
 
-  vector<double> x(nx), y(ny);
   double **u;
   double **v;
   double **p; // cuda
@@ -163,11 +162,6 @@ int main() {
   init_zeros<<<BLOCKS(ny * nx), M>>>(un, ny, nx);
   init_zeros<<<BLOCKS(ny * nx), M>>>(vn, ny, nx);
 
-  // initialize x and y
-  for (int i = 0; i < nx; i++)
-    x[i] = i * dx;
-  for (int j = 0; j < ny; j++)
-    y[j] = j * dy;
 #ifdef DEBUG
   chrono::steady_clock::time_point tic;
   chrono::steady_clock::time_point toc;
