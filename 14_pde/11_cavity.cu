@@ -116,25 +116,33 @@ int main() {
   double nu = 0.02;
 
   vector<double> x(nx), y(ny);
-  mat u(ny, arr(nx, 0));
-  mat v(ny, arr(nx, 0));
+  double **u;
+  double **v;
   double **p; // cuda
   double **b; // cuda
 
   // mat pn(ny, arr(nx, 0));
   double **pn; // cuda
-  mat un(ny, arr(nx, 0));
-  mat vn(ny, arr(ny, 0));
+  double **un;
+  double **vn;
 
   // allocate cuda-related arrays
   matalloc(&p, ny, nx);
   matalloc(&pn, ny, nx);
   matalloc(&b, ny, nx);
+  matalloc(&u, ny, nx);
+  matalloc(&v, ny, nx);
+  matalloc(&un, ny, nx);
+  matalloc(&vn, ny, nx);
 
   // initialize cuda-related arrays
   init_zeros<<<BLOCKS(ny * nx), M>>>(p, ny, nx);
   init_zeros<<<BLOCKS(ny * nx), M>>>(pn, ny, nx);
   init_zeros<<<BLOCKS(ny * nx), M>>>(b, ny, nx);
+  init_zeros<<<BLOCKS(ny * nx), M>>>(u, ny, nx);
+  init_zeros<<<BLOCKS(ny * nx), M>>>(v, ny, nx);
+  init_zeros<<<BLOCKS(ny * nx), M>>>(un, ny, nx);
+  init_zeros<<<BLOCKS(ny * nx), M>>>(vn, ny, nx);
 
   // initialize x and y
   for (int i = 0; i < nx; i++)
