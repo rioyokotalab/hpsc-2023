@@ -12,6 +12,13 @@ typedef vector<arr> mat;
 const int M = 1024; // num of threads per block
 #define BLOCKS(n_loop) (n_loop + M - 1) / M
 
+void matalloc(double ***ptr, int ny, int nx) {
+  cudaMallocManaged(ptr, ny * sizeof(double *));
+  for (int j = 0; j < ny; j++) {
+    cudaMallocManaged(&(*ptr)[j], nx * sizeof(double));
+  }
+}
+
 __global__ void init_zeros(double **a, int ny, int nx) {
   const int index = blockIdx.x * blockDim.x + threadIdx.x;
   const int j = index / ny;
@@ -58,12 +65,8 @@ int main() {
   mat vn(ny, arr(ny, 0));
 
   // allocate cuda-related arrays
-  cudaMallocManaged(&p, ny * sizeof(double *));
-  for (int i = 0; i < nx; i++)
-    cudaMallocManaged(&p[i], nx * sizeof(double));
-  cudaMallocManaged(&pn, ny * sizeof(double *));
-  for (int i = 0; i < nx; i++)
-    cudaMallocManaged(&pn[i], nx * sizeof(double));
+  matalloc(&p, ny, nx);
+  matalloc(&pn, ny, nx);
 
   // initialize cuda-related arrays
   init_zeros<<<BLOCKS(ny * nx), M>>>(p, ny, nx);
