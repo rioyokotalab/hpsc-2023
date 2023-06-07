@@ -155,9 +155,8 @@ int main() {
   double time_iter;
 #endif // DEBUG_ITER
 
-
 #ifdef DEBUG
-    tic = chrono::steady_clock::now();
+  tic = chrono::steady_clock::now();
 #endif // DEBUG
 
   // allocate cuda-related arrays
@@ -177,11 +176,12 @@ int main() {
   init_zeros<<<BLOCKS(ny * nx), M>>>(v, ny, nx);
   init_zeros<<<BLOCKS(ny * nx), M>>>(un, ny, nx);
   init_zeros<<<BLOCKS(ny * nx), M>>>(vn, ny, nx);
+  cudaDeviceSynchronize();
 
 #ifdef DEBUG
-    toc = chrono::steady_clock::now();
-    time = chrono::duration<double>(toc - tic).count();
-    cout << "allocation-related: " << time << endl;
+  toc = chrono::steady_clock::now();
+  time = chrono::duration<double>(toc - tic).count();
+  cout << "allocation-related: " << time << endl;
 #endif // DEBUG
 
   // main for, do not apply openmp
@@ -218,6 +218,7 @@ int main() {
 #endif // DEBUG_ITER
       // copy p to pn
       matcopy<<<BLOCKS(nx * ny), M>>>(p, pn, ny, nx);
+      cudaDeviceSynchronize();
 #ifdef DEBUG_ITER
       toc_iter = chrono::steady_clock::now();
       time_iter = chrono::duration<double>(toc_iter - tic_iter).count();
@@ -228,6 +229,7 @@ int main() {
 #endif // DEBUG_ITER
       // }
       update_p<<<BLOCKS(nx * ny), M>>>(p, pn, b, dy, dx, ny, nx);
+      cudaDeviceSynchronize();
 #ifdef DEBUG_ITER
       toc_iter = chrono::steady_clock::now();
       time_iter = chrono::duration<double>(toc_iter - tic_iter).count();
@@ -239,6 +241,7 @@ int main() {
 #endif // DEBUG_ITER
       boundary_p_y<<<BLOCKS(nx * ny), M>>>(p, ny, nx);
       boundary_p_x<<<BLOCKS(nx * ny), M>>>(p, ny, nx);
+      cudaDeviceSynchronize();
 #ifdef DEBUG_ITER
       toc_iter = chrono::steady_clock::now();
       time_iter = chrono::duration<double>(toc_iter - tic_iter).count();
@@ -256,6 +259,7 @@ int main() {
 #endif // DEBUG
     matcopy<<<BLOCKS(nx * ny), M>>>(u, un, ny, nx);
     matcopy<<<BLOCKS(nx * ny), M>>>(v, vn, ny, nx);
+    cudaDeviceSynchronize();
 #ifdef DEBUG
     toc = chrono::steady_clock::now();
     time = chrono::duration<double>(toc - tic).count();
@@ -266,6 +270,7 @@ int main() {
 #endif // DEBUG
     update_u<<<BLOCKS(nx * ny), M>>>(u, un, p, dt, dy, dx, ny, nx, rho, nu);
     update_v<<<BLOCKS(nx * ny), M>>>(v, vn, p, dt, dy, dx, ny, nx, rho, nu);
+    cudaDeviceSynchronize();
 #ifdef DEBUG
     toc = chrono::steady_clock::now();
     time = chrono::duration<double>(toc - tic).count();
@@ -276,6 +281,7 @@ int main() {
 #endif // DEBUG
     boundary_u_v_y<<<BLOCKS(nx * ny), M>>>(u, v, ny, nx);
     boundary_u_v_x<<<BLOCKS(nx * ny), M>>>(u, v, ny, nx);
+    cudaDeviceSynchronize();
 #ifdef DEBUG
     toc = chrono::steady_clock::now();
     time = chrono::duration<double>(toc - tic).count();
