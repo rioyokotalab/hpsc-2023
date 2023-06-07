@@ -145,6 +145,18 @@ int main() {
   double **vn;
 
 #ifdef DEBUG
+  chrono::steady_clock::time_point tic;
+  chrono::steady_clock::time_point toc;
+  double time;
+#endif // DEBUG
+#ifdef DEBUG_ITER
+  chrono::steady_clock::time_point tic_iter;
+  chrono::steady_clock::time_point toc_iter;
+  double time_iter;
+#endif // DEBUG_ITER
+
+
+#ifdef DEBUG
     tic = chrono::steady_clock::now();
 #endif // DEBUG
 
@@ -171,17 +183,6 @@ int main() {
     time = chrono::duration<double>(toc - tic).count();
     cout << "allocation-related: " << time << endl;
 #endif // DEBUG
-
-#ifdef DEBUG
-  chrono::steady_clock::time_point tic;
-  chrono::steady_clock::time_point toc;
-  double time;
-#endif // DEBUG
-#ifdef DEBUG_ITER
-  chrono::steady_clock::time_point tic_iter;
-  chrono::steady_clock::time_point toc_iter;
-  double time_iter;
-#endif // DEBUG_ITER
 
   // main for, do not apply openmp
   for (int n = 0; n < nt; n++) {
